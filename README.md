@@ -12,6 +12,12 @@ Unfortunately using those values doesn't work for 8-bits.  The values are low en
 
 ![Wiring](/fritzing/schematic.png)
 
+The R2R DAC will draw about 19mA total from the Pico when all the bits are '1', with a maximum of 6.5mA on any single pin.  Here's the simulation:
+
+![simulation](/images/circuit-20210605-1521.png)
+
+You can access the simulation here: [R2R DAC Simulation](https://tinyurl.com/yyc6fewc)
+
 #### Bitmaps
 A portion of the NTSC signal is reserved for SYNC and BLANKing:
 
@@ -38,7 +44,7 @@ The program is doing that and can render the Indian test pattern:
 
 ![Indian](/images/indianScale.jpg)
 
-There's just one problem though...
+Notice the concentric circles around the 30's and the vertical/horizontal resolution lines.
 
 #### the BUG
 

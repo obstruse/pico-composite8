@@ -68,10 +68,8 @@ const int   HORIZ_pixel_start = (HORIZ_visible_dots - width) / 2 + HORIZ_SYNC_do
 
 const int   VERT_scanlines = VIDEO_frame_lines / 2;				// one field
 const int   VERT_vblank    = (VIDEO_frame_lines - VIDEO_frame_lines_visible) / 2;	// vertical blanking, one field
-
-int   VERT_border    = (VERT_scanlines - VERT_vblank - height/2) / 2;
-int   VERT_bitmap   = height/2;
-//// making the above 'const' causes vertical jitter/defects ////
+const int   VERT_border    = (VERT_scanlines - VERT_vblank - height/2) / 2;
+const int   VERT_bitmap   = height/2;
 
 /*-------------------------------------------------------------------*/
 /*------------------PIO----------------------------------------------*/
@@ -117,7 +115,6 @@ unsigned char * vsync_ssb;                            // Buffer and a half for e
 unsigned char * border;                               // Buffer for a vsync line for the top and bottom borders
 unsigned char * pixel_buffer[2];                      // Double-buffer for the pixel data scanlines
 
-volatile bool bitmapReading = false;
 volatile bool changeBitmap  = false;
 
 /*-------------------------------------------------------------------*/
@@ -153,7 +150,7 @@ void second_core() {
 
 	    changeBitmap = false;	// ...switch back to displaying bitmap
 
-	    //sleep_ms(1000);
+	    //sleep_ms(1000);		// sleep_ms() causes a visible glitch
 	    busy_wait_us(1000000);
 #endif
     }
