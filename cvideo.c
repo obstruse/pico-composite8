@@ -15,7 +15,7 @@
 */
 
 
-//#define TESTPATTERN
+#define TESTPATTERN
 
 #include <stdlib.h>
 //#include <stdio.h>
