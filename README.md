@@ -44,7 +44,26 @@ The program is doing that and can render the Indian test pattern:
 
 ![Indian](/images/indianScale.jpg)
 
-Notice the concentric circles around the 30's and the vertical/horizontal resolution lines.
+Note the concentric circles around the 30's and the vertical/horizontal resolution lines.
+
+#### Compiling/Uploading
+
+Compile using VSCode with the **GCC 9.2.1 arm-none-eabi** kit (which 
+unfortunately isn't available on the Raspberry Pi (yet)).  
+
+To deploy from the development platform (e.g. X86 Ubuntu) to the Pico using SWD, you need a Raspberry Pi running **openOCD**.  The Pico connects to the Raspberry Pi like this:
+
+![SWD Wire](/images/SWDwire.png)
+
+On the Raspberry Pi, execute openOCD:
+
+`openocd -c "bindto 0.0.0.0" -f interface/raspberrypi-swd.cfg -f target/rp2040.cfg`
+
+On the Development Machine, click the **Run and Debug** icon in the left-side menu - it will execute the `.vscode/launch.json` included in the project.  Click the triangle next to **Pico Deploy** in the top-side menu, and enter the  address of the Raspberry Pi SWD Host in the box to the right:  
+
+![SWD host](/images/SWDhost.png)
+
+The program will compile, upload to the Pico, and break at `main()`.  You can either remove the programmed Pico, or continue with debug commands, top-side middle menu.
 
 #### the BUG
 
@@ -52,6 +71,6 @@ The interlace fails and only gives half the vertical resolution unless there's a
 
 ![Bug](/images/bug.jpg)
 
-15 usec isn't enough, only 30 usec will work.  Other than that, it follows the timing above... Sort of stumbled into it by accident:  in an early version there was a memcpy there that took 30 usec to complete.  When I took that out, interlace failed until I added an equivalent 30 usec delay.  Definitely not something in the timing diagram...  Any ideas, let me know:  obstruse at earthlink dot net.
+15 usec isn't enough, only 30 usec will work.  Other than that, it follows the timing above... Sort of stumbled into it by accident:  in an early version there was a memcpy there that took 30 usec to complete.  When I took that out, interlace failed until I added an equivalent 30 usec delay.  Don't know why...
 
 

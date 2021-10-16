@@ -1,0 +1,5 @@
+build/
+doxygen/
+.vscode/.cortex-debug.peripherals.state.json
+.vscode/.cortex-debug.registers.state.json
+.vscode/main.cdasm

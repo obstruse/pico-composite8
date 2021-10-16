@@ -15,7 +15,7 @@
 */
 
 
-#define TESTPATTERN
+//#define TESTPATTERN
 
 #include <stdlib.h>
 //#include <stdio.h>
@@ -103,6 +103,8 @@ int bmCount = 0;
 // bitmap buffer
 #ifdef TESTPATTERN
 #include "indian.h"
+//#include "gradient4.h"
+//#include "demo.h"
 unsigned char * bitmap = (unsigned char *)indian;
 #else
 unsigned char bitmap[width*height]={[0 ... width*height-1] = WHITE};
@@ -162,14 +164,7 @@ int main() {
 //	sleep_ms(2000);
 //	printf("Start of program\n");
 
-    gpio_init(8);
-    gpio_set_dir(8,GPIO_OUT);
-    gpio_init(9);
-    gpio_set_dir(9,GPIO_OUT);
-    gpio_init(10);
-    gpio_set_dir(10,GPIO_OUT);
-
-    multicore_launch_core1(second_core);
+     multicore_launch_core1(second_core);
 
     vsync_ll = (unsigned char *)malloc(HORIZ_dots);
     memset(vsync_ll, SYNC, HORIZ_dots);				// vertical sync/serrations
@@ -205,19 +200,17 @@ int main() {
     // Initialise the PIO
     PIO pio = pio0;
     uint offset = pio_add_program(pio, &cvideo_program);	// Load up the PIO program
-    pio_sm_set_enabled(pio, state_machine, false);              // Disable the PIO state machine
+    pio_sm_set_enabled(pio, state_machine, false);          // Disable the PIO state machine
     pio_sm_clear_fifos(pio, state_machine);	                // Clear the PIO FIFO buffers
     cvideo_initialise_pio(pio, state_machine, offset, 0, 8, PIO_clkdiv); // Initialise the PIO (function in cvideo.pio)
 
-    dma_channel = dma_claim_unused_channel(true);		// Claim a DMA channel for the hsync transfer
+    dma_channel = dma_claim_unused_channel(true);		    // Claim a DMA channel for the hsync transfer
     cvideo_configure_pio_dma(pio, state_machine, dma_channel, HORIZ_dots); // Hook up the DMA channel to the state machine
 
-    pio_sm_set_enabled(pio, state_machine, true);               // Enable the PIO state machine
-
     // And kick everything off
-    cvideo_dma_handler();       // Call the DMA handler as a one-off to initialise it
+    pio_sm_set_enabled(pio, state_machine, true);           // Enable the PIO state machine
 
-    while (true) {              // And then just loop doing nothing
+    while (true) {                                          // And then just loop doing nothing
 	tight_loop_contents();
     }
 }
@@ -231,9 +224,8 @@ void cvideo_dma_handler(void) {
     if ( ++vline <= VERT_scanlines ) {
     } else {
         vline = 0;
-	bline = 0;
-	field = ++field & 0x01;
-	gpio_put(10,field);
+	    bline = 0;
+	    field = ++field & 0x01;
     }
 
     while (true) {
@@ -245,7 +237,6 @@ void cvideo_dma_handler(void) {
 		// for some reason interlace fails unless there's a 30usec delay here:
 		busy_wait_us(HORIZ_usec/2);
 
-		gpio_put(8,0);
 		if ( field ) {
 			// odd field - blank, full line
 			dma_channel_set_read_addr(dma_channel, vsync_bb, true);
@@ -259,7 +250,6 @@ void cvideo_dma_handler(void) {
 		break;
 
             case 1:
-		gpio_put(8,1);
 		dma_channel_set_trans_count(dma_channel, HORIZ_dots, false);   // reset transfer size
             case 2 ... 3:
                 // send 3 vsync_ss - 'equalizing pulses'
@@ -280,7 +270,6 @@ void cvideo_dma_handler(void) {
                 break;
 
 	    case 9:
-		gpio_put(9,0);
 		if ( field ) {
 			// odd field - equalizing pulse, full line
 			dma_channel_set_read_addr(dma_channel, vsync_ss, true);
@@ -294,7 +283,6 @@ void cvideo_dma_handler(void) {
 		break;
 
             case 10:
-		gpio_put(9,1);
 		// everything back to normal
 		dma_channel_set_trans_count(dma_channel, HORIZ_dots, false);   // reset transfer size
 	    default:
@@ -364,10 +352,10 @@ void cvideo_configure_pio_dma(PIO pio, uint sm, uint dma_channel, size_t buffer_
     channel_config_set_dreq(&c, pio_get_dreq(pio, sm, true));
 
     dma_channel_configure(dma_channel, &c,
-                          &pio->txf[sm],              // Destination pointer
-                          NULL,                       // Source pointer
+                          &pio->txf[sm],              // Destination - PIO queue
+                          vsync_bb,                   // Source - Equalizing Pulses
                           buffer_size_words,          // Number of transfers
-                          true                        // Start flag (true = start immediately)
+                          true                        // Start - queue the Source to the Destination
                          );
 
     dma_channel_set_irq0_enabled(dma_channel, true);
